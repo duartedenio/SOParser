@@ -4,13 +4,16 @@ from scipy.stats import entropy
 from numpy.linalg import norm
 from numpy import array
 
-
+import pdb
 
 def main():
     global numtopics, vocabsize
-    dates = ['2013-01', '2013-02', '2013-03', '2013-04', '2013-05', '2013-06', '2013-07', '2013-08', '2013-09', '2013-10', '2013-11', '2013-12',
-             '2014-01', '2014-02', '2014-03', '2014-04', '2014-05', '2014-06', '2014-07', '2014-08', '2014-09', '2014-10', '2014-11', '2014-12']
-    # dates = ['2013-02', '2013-03'] #, '2013-03', '2013-03']
+    dates = ['2013-1stQ','2013-2ndQ','2013-3rdQ','2013-4thQ','2014-1stQ','2014-2ndQ','2014-3rdQ','2014-4thQ']
+    #dates = ['2013-01', '2013-02', '2013-03', '2013-04', '2013-05', '2013-06', '2013-07', '2013-08', '2013-09', '2013-10', '2013-11', '2013-12',
+    #         '2014-01', '2014-02', '2014-03', '2014-04', '2014-05', '2014-06', '2014-07', '2014-08', '2014-09', '2014-10', '2014-11', '2014-12']
+    #dates = ['2013-01','2013-02', '2013-03'] #, '2013-03', '2013-03']
+    #dates = ['2013-01', '2013-02', '2013-03', '2013-04', '2013-05', '2013-06', '2013-07', '2013-08', '2013-09', '2013-10', '2013-11', '2013-12']
+
     numtopics = 40
     vocabsize = 2000
     # compareMonths(dates)
@@ -21,7 +24,7 @@ def main():
 def compareMonths(dates):
     i = 1
     for month in dates:
-        print month
+        print (month)
         nextmonth = dates[i]
         TVDBasedSimilarity(month, nextmonth)
         KLDBasedSimilarity(month, nextmonth)
@@ -110,7 +113,9 @@ def printTopicWords(dates):
         lda = models.LdaModel.load("ldamodels/" + month + "-lda.model")
         topicfile = open("topics/"+month+"-topicwords.txt", "w")
         ldalist = lda.show_topics(num_topics=numtopics, num_words=10, log=False, formatted=False)
-        wordlists = { topic[0]: [wordvals[0].encode('utf-8') for wordvals in topic[1]] for topic in ldalist}
+        #pdb.set_trace()
+        # wordlists = { topic[0]: [wordvals[0].encode('utf-8') for wordvals in topic[1]] for topic in ldalist} ## delete encode('utf-8')
+        wordlists = { topic[0]: [wordvals[0] for wordvals in topic[1]] for topic in ldalist}
         for topic in wordlists.keys():
             line = str(topic) + "\t" + " ".join(wordlists[topic]) + "\n"
             topicfile.write(line)

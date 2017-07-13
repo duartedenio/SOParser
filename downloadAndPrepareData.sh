@@ -7,6 +7,8 @@ mkdir data
 mkdir models
 mkdir topics
 mkdir rawdata
+# the following folder was missing
+mkdir ldamodels
 cd rawdata
 
 if [ ! -f "stackoverflow.com-Posts.7z" ]; then

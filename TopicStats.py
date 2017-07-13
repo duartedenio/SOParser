@@ -6,17 +6,20 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 
 def main():
     global topicthreshold
-    dates = ['2013-01', '2013-02', '2013-03', '2013-04', '2013-05', '2013-06', '2013-07', '2013-08', '2013-09', '2013-10', '2013-11', '2013-12',
-             '2014-01', '2014-02', '2014-03', '2014-04', '2014-05', '2014-06', '2014-07', '2014-08', '2014-09', '2014-10', '2014-11', '2014-12']
+    dates = ['2013-1stQ','2013-2ndQ','2013-3rdQ','2013-4thQ','2014-1stQ','2014-2ndQ','2014-3rdQ','2014-4thQ']
+    #dates = ['2013-01', '2013-02', '2013-03', '2013-04', '2013-05', '2013-06', '2013-07', '2013-08', '2013-09', '2013-10', '2013-11', '2013-12',
+    #         '2014-01', '2014-02', '2014-03', '2014-04', '2014-05', '2014-06', '2014-07', '2014-08', '2014-09', '2014-10', '2014-11', '2014-12']
     # dates = ['2013-01', '2013-02']
+    #dates = ['2013-01', '2013-02', '2013-03', '2013-04', '2013-05', '2013-06', '2013-07', '2013-08', '2013-09', '2013-10', '2013-11', '2013-12']
+    
     topics = 40
     topicthreshold = 0.3
+    merge=True
+    # countWords(dates, topics,merge)
+    docPerTopic(dates,merge)
 
-    # countWords(dates, topics)
-    docPerTopic(dates)
 
-
-def docPerTopic(dates):
+def docPerTopic(dates,mergeDocs):
     dictionary = corpora.Dictionary.load("models/global-dictionary.dict")
     doctopics = {}
     topicfile = open("stats/docpertopic.tsv", 'w')
@@ -25,7 +28,11 @@ def docPerTopic(dates):
         date = str(date)
         print(date)
 
-        tokenized_dictfile = "models/"+date+"-monthly-tokenized_dict.pdict"
+        if not mergeDocs:
+            tokenized_dictfile = "models/"+date+"-monthly-tokenized_dict.pdict"
+        else:
+            tokenized_dictfile = "models/"+date+"-monthly-tokenized_dict-perUser.pdict" 
+        ####    
         with open(tokenized_dictfile, 'rb') as f:
             tokenized_dict = cPickle.load(f)
 
@@ -35,7 +42,12 @@ def docPerTopic(dates):
         for doc in documentfile:
             [docid, userid, creationdate, score, title, tags, text] = doc.rstrip("\n").split("\t")
 
-
+            ###### 
+            if not mergeDocs:
+                sentence = tokenized_dict[docid]
+            else:
+                sentence = tokenized_dict[userid]
+            #######
             sentence = tokenized_dict[docid]
             bow = dictionary.doc2bow(sentence)
             documenttopics = lda[bow]
@@ -65,7 +77,7 @@ def docPerTopic(dates):
 
 
 
-def countWords(dates, numtopics):
+def countWords(dates, numtopics, mergeDocs):
     wordfile = open("stats/wordcounts.tsv", "w")
     words = {} #each word counted once per doc
     totalwords = {} #each word counted n times per n mentions in doc
@@ -76,7 +88,11 @@ def countWords(dates, numtopics):
         words[date] = 0
         uniquewords[date]  = set()
         totalwords[date] = 0
-        tokenized_dictfile = "models/"+date+"-monthly-tokenized_dict.pdict"
+        if not mergeDocs:
+            tokenized_dictfile = "models/"+date+"-monthly-tokenized_dict.pdict"
+        else:
+            tokenized_dictfile = "models/"+date+"-monthly-tokenized_dict-perUser.pdict"
+        ###    
         with open(tokenized_dictfile, 'rb') as f:
             tokenized_dict = cPickle.load(f)
         dictionary = corpora.Dictionary.load("models/global-dictionary.dict")

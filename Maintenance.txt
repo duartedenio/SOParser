@@ -1,0 +1,69 @@
+Changes made in the programs:
+
+-- Some stuffs due to Python2 and Pyhton3 incompatibilities
+
+Script:
+-- Fix the year problem (checked out) already pulled in github
+-- Fix the folder problem (add ldamodels)
+
+-- create a new script prepareQuarter.sh (split xml files into quarter instead of months)
+
+-- Folder users must be create under topics folder (createUserEvolutionChain method/function)
+
+TextProcessor.py
+-- Adapted it to Python 3 (cPickle, string methods, stem bug)
+-- Fix file name problem (line 54) open("data/" + str(date) + "-titleS-users.txt", "r") -- it was missing S in the name
+-- Adapted it to consider all user's document as one (time sliced)
+
+---- createDictionariesFromFiles: added the creation of file date+"monthly-tokenized_dict-perUser.pdict"
+
+---- createGlobalDictionaryFromMonthly: added a new paramater mergeDocs=False (if False documents are split by post, otherwise by user)
+------------- false: opens date+"monthly-tokenized_dict.pdict"
+------------- true:  opens date+"monthly-tokenized_dict-perUser.pdict"
+------------- The output is the same (global dictionary)
+
+---- createMonthsCorpus: added a new paramater mergeDocs=False 
+------------- false: input: date+"monthly-tokenized_dict.pdict"         output: date+'-tokenized.mm'
+------------- true:  input: date+"monthly-tokenized_dict-perUser.pdict" output: date+'-tokenizedUser.mm'
+
+---- performTFIDF: new parameter added mergeDocs=False
+------------- false: input: date+'-tokenized.mm'     output: date+'tfidf.mm' and date+"-tfidf.model"
+------------- true:  input: date+'-tokenizedUser.mm' output: date+'tfidfUser.mm' and date+"-tfidfUser.model"
+
+---- performLDA: new parameter added mergeDocs=False
+------------- false: input: "models/" + date +"-tfidf.mm"     output: the same file
+------------- true:  input: "models/" + date +"-tfidfUser.mm" output: the same file
+
+---- calculateEta: new parameter added: mergeDocs=False
+------------- false: input: date+"monthly-tokenized_dict.pdict"  output: the same
+------------- true:  input: date+"monthly-tokenized_dict-perUser.pdict" output: the same
+
+-- lookupLDATopics: new parameter added: mergeDocs=False
+---- false: input: date+"monthly-tokenized_dict.pdict"    output: the same
+---- true:  input: date+"monthly-tokenized_dict-perUser.pdict"  output: the same
+
+-- performLDA
+----- Fix bug when call calculateEta: the parameter "vocabulary size" must set to len(dictionary.keys()) instead of vocabsize
+------------ (since the vocabulary size produced by dictionary can be smalller than vocabsize)
+
+UserComparator.py
+-- summarizeTopicsPerUser received a new parameter to deal with document by post or by User
+---- false: input "models/"+date+"-monthly-tokenized_dict.pdict"           output: the same
+---- true:  input: "models/"+date+"-monthly-tokenized_dict.pdict-perUser"  output: the same
+----------- the key for tokenized_dict is userid instead of docid
+
+-- lookupTopics received a new parameter to deal with document by post or by User
+---- false: input "models/"+date+"-monthly-tokenized_dict.pdict"           output: the same
+---- true:  input: "models/"+date+"-monthly-tokenized_dict.pdict-perUser"  output: the same
+----------- the key for tokenized_dict is userid instead of docid
+
+TopicStats.py
+-- docPerTopic received a new parameter to deal with document by post or by User
+---- false: input "models/"+date+"-monthly-tokenized_dict.pdict"           output: the same
+---- true:  input: "models/"+date+"-monthly-tokenized_dict.pdict-perUser"  output: the same
+
+-- countWords received a new parameter to deal with document by post or by User
+---- false: input "models/"+date+"-monthly-tokenized_dict.pdict"           output: the same
+---- true:  input: "models/"+date+"-monthly-tokenized_dict.pdict-perUser"  output: the same
+
+

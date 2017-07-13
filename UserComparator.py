@@ -1,30 +1,39 @@
 from gensim import corpora, models
-import cPickle, numpy, logging, scipy
+import numpy, logging, scipy
 from numpy.linalg import norm
 from scipy.stats import entropy
 
+import _pickle as cPickle ## Python 3 does not have cPickle
+
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.DEBUG)
+
+import pdb
 
 def main():
     global topicthreshold
-    dates = ['2013-01', '2013-02', '2013-03', '2013-04', '2013-05', '2013-06', '2013-07', '2013-08', '2013-09',
-             '2013-10', '2013-11', '2013-12',
-             '2014-01', '2014-02', '2014-03', '2014-04', '2014-05', '2014-06', '2014-07', '2014-08', '2014-09',
-             '2014-10', '2014-11', '2014-12']
-    # dates = ['2013-01', '2013-02', '2013-03']
+    dates = ['2013-1stQ','2013-2ndQ','2013-3rdQ','2013-4thQ','2014-1stQ','2014-2ndQ','2014-3rdQ','2014-4thQ']
+    #dates = ['2013-01', '2013-02', '2013-03', '2013-04', '2013-05', '2013-06', '2013-07', '2013-08', '2013-09',
+    #         '2013-10', '2013-11', '2013-12',
+    #         '2014-01', '2014-02', '2014-03', '2014-04', '2014-05', '2014-06', '2014-07', '2014-08', '2014-09',
+    #         '2014-10', '2014-11', '2014-12']
+    #dates = ['2013-01', '2013-02', '2013-03']
+    #dates = ['2013-01', '2013-02', '2013-03', '2013-04', '2013-05', '2013-06', '2013-07', '2013-08', '2013-09', '2013-10', '2013-11', '2013-12']
+
     numtopics = 40
     vocabsize = 2000
     topicthreshold = 0.3
+    merge=True
 
-    # summarizeTopicsPerUser(dates)
-    # compareMonths(dates)
-    # lookupTopics(dates)
+    #summarizeTopicsPerUser(dates,merge)
+    #compareMonths(dates)
+    #lookupTopics(dates,merge)
+    #####
     createUserEvolutionChain(dates)
 
 def compareMonths(dates):
     i = 1
     for month in dates:
-        print month
+        print (month)
         nextmonth = dates[i]
         # TVDBasedSimilarity(month, nextmonth)
         KLDBasedSimilarity(month, nextmonth)
@@ -83,7 +92,7 @@ def JSD(P, Q):
 
 
 
-def summarizeTopicsPerUser(dates):
+def summarizeTopicsPerUser(dates,mergeDocs=False):
     dictionary = corpora.Dictionary.load("models/global-dictionary.dict")
     usersfile = "data/allusers.txt"
     users = set(open(usersfile).read().split())
@@ -96,18 +105,25 @@ def summarizeTopicsPerUser(dates):
         date = str(date)
         print(date)
 
-        tokenized_dictfile = "models/"+date+"-monthly-tokenized_dict.pdict"
+        if not mergeDocs:
+            tokenized_dictfile = "models/"+date+"-monthly-tokenized_dict.pdict"
+        else:
+            tokenized_dictfile = "models/"+date+"-monthly-tokenized_dict-perUser.pdict"
+        ###
         with open(tokenized_dictfile, 'rb') as f:
             tokenized_dict = cPickle.load(f)
         documentfile = open("data/" + date + "-titles-tags-text.tsv")
 
         lda = models.LdaMulticore.load("ldamodels/" + date + "-lda.model")
-
+        ###pdb.set_trace()
         for doc in documentfile:
             [docid, userid, creationdate, score, title, tags, text] = doc.rstrip("\n").split("\t")
             document_users[docid] = userid
             document_scores[docid] = score
-            sentence = tokenized_dict[docid]
+            if not mergeDocs:
+                sentence = tokenized_dict[docid]
+            else:
+                sentence = tokenized_dict[userid]
             bow = dictionary.doc2bow(sentence)
             documenttopics = lda[bow]
             for (topicid, topicvalue) in documenttopics:
@@ -148,7 +164,7 @@ def writecpicklefile(content, filename):
 
 
 
-def lookupTopics(dates):
+def lookupTopics(dates,mergeDocs=False):
     dictionary = corpora.Dictionary.load("models/global-dictionary.dict")
     document_users = {}
     document_scores = {}
@@ -156,8 +172,12 @@ def lookupTopics(dates):
     for date in dates:
         date = str(date)
         print(date)
-
-        tokenized_dictfile = "models/"+date+"-monthly-tokenized_dict.pdict"
+    
+        if not mergeDocs:
+            tokenized_dictfile = "models/"+date+"-monthly-tokenized_dict.pdict"
+        else:
+            tokenized_dictfile = "models/"+date+"-monthly-tokenized_dict-perUser.pdict"
+        ####    
         with open(tokenized_dictfile, 'rb') as f:
             tokenized_dict = cPickle.load(f)
 
@@ -179,7 +199,10 @@ def lookupTopics(dates):
                     continue
             document_users[docid] = userid
             document_scores[docid] = score
-            sentence = tokenized_dict[docid]
+            if not mergeDocs:
+                sentence = tokenized_dict[docid]
+            else:
+                sentence = tokenized_dict[userid]
             bow = dictionary.doc2bow(sentence)
             documenttopics = lda[bow]
             for (topicid, topicvalue) in documenttopics:
@@ -215,6 +238,7 @@ def lookupTopics(dates):
                 # resultline = str(topicid) + "\t" + str(userid) + "\t" + str(meantopicvalue) + "\n"
                 topicfile.write(resultline)
         topicfile.close()
+    print('***** End (lookupTopics) ****')
 
 def createUserEvolutionChain(dates):
     topicscores={}
@@ -234,6 +258,7 @@ def createUserEvolutionChain(dates):
     users.add("7585")
     users.add("12579")
 
+    print('***** Begin (createUserEvolution) ****')
     for date in dates:
         topicfile = open("topics/" + date + "-topics.txt", 'r')
         allwords[date] = {}
