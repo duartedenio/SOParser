@@ -1,5 +1,6 @@
 from gensim import corpora, models
-import logging, numpy, cPickle
+import logging, numpy #, cPickle
+import _pickle as cPickle ## Python 3 does not have cPickle
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.ERROR)
 
 
@@ -15,7 +16,7 @@ def main():
     topics = 40
     topicthreshold = 0.3
     merge=True
-    # countWords(dates, topics,merge)
+    countWords(dates, topics,merge)
     docPerTopic(dates,merge)
 
 
@@ -48,7 +49,6 @@ def docPerTopic(dates,mergeDocs):
             else:
                 sentence = tokenized_dict[userid]
             #######
-            sentence = tokenized_dict[docid]
             bow = dictionary.doc2bow(sentence)
             documenttopics = lda[bow]
             for (topicid, topicvalue) in documenttopics:
@@ -65,7 +65,7 @@ def docPerTopic(dates,mergeDocs):
                     doctopics[topicid][date] = 0
                 doctopics[topicid][date]+=1
 
-    print doctopics
+    print (doctopics)
     for topicid in doctopics.keys():
         line = str(topicid)
         for date in doctopics[topicid].keys():
@@ -102,6 +102,7 @@ def countWords(dates, numtopics, mergeDocs):
         logging.info("Parsing date: %s", str(date))
         [countedwordtopics.append(0) for i in range(numtopics)]
         for docID in tokenized_dict.keys():
+            # check if it is necessary to choose between docID or UserID (when mergeDoc is True) 
             doc = tokenized_dict[docID]
             bow = dictionary.doc2bow(doc)
             wordcount = len(bow)
