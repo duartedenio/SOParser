@@ -132,7 +132,7 @@ def extractComments(years,isQuarter=False):
             parsedpostsfile.close()
             rawpostsfile.close()
 
-            pdb.set_trace()
+            #pdb.set_trace()
             with open("data/"+ yearmonth + "-titles-users.txt", 'w') as f:  
                 f.write("\n".join(monthusers))
             with open("data/" + yearmonth + "-questiontitles.dict", 'wb') as f: ## add b (binary mode)
